@@ -2,11 +2,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdint.h>
 
 #define CANTIDAD_BASE_COMANDOS 15
 #define AZUL "\x1b[34;1m"
 #define AMARILLO "\x1b[33;1m"
+
+typedef struct {
+	void (*destructor)(void *);
+} destructor_func_t;
 
 typedef struct comando_aux {
 	comando_t *comando;
@@ -284,8 +287,8 @@ bool menu_destruir_alias(const char *clave, void *elemento, void *aux)
 		return false;
 
 	comando_t *comando = elemento;
-	void (*destructor)(void *) = (void (*)(void *))(intptr_t)aux;
-	comando_destruir_todo(comando, destructor);
+	destructor_func_t *destructora = (destructor_func_t *)aux;
+	comando_destruir_todo(comando, destructora->destructor);
 	return true;
 }
 
@@ -299,8 +302,8 @@ bool menu_destruir_comandos(const char *clave, void *elemento, void *aux)
 
 	comando_t *comando = elemento;
 	hash_con_cada_clave(comando->alias, menu_destruir_alias, aux);
-	void (*destructor)(void *) = (void (*)(void *))(intptr_t)aux;
-	comando_destruir_todo(comando, destructor);
+	destructor_func_t *destructora = (destructor_func_t *)aux;
+	comando_destruir_todo(comando, destructora->destructor);
 	return true;
 }
 
@@ -309,8 +312,14 @@ void menu_destruir_todo(menu_t *menu, void (*destructor)(void *))
 	if (!menu)
 		return;
 
-	intptr_t destructor_int = (intptr_t)destructor;
+	if (!menu->comandos) {
+		free(menu);
+		return;
+	}
+
+	destructor_func_t destructora;
+	destructora.destructor = destructor;
 	hash_con_cada_clave(menu->comandos, menu_destruir_comandos,
-			    (void *)destructor_int);
+			    &destructora);
 	free(menu);
 }
