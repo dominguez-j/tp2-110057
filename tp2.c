@@ -23,7 +23,7 @@ char *leer_interaccion(char *buffer, int tam)
 */
 bool ejecutar_salir(void *menu, void *hospitales)
 {
-	menu_destruir_todo((menu_t*)menu, free);
+	menu_destruir((menu_t*)menu);
 	return false;
 }
 
@@ -182,6 +182,13 @@ void agregar_comandos(menu_t *menu)
 			"D", "Destruye el hospital activo",
 			"Destruye el hospital activo, liberando toda la memoria ocupada por el mismo",
 			ejecutar_destruir, alias_destruir));
+
+	/*hash_destruir(alias_activar);
+	hash_destruir(alias_listar);
+	hash_destruir(alias_destruir);
+	hash_destruir(alias_ayuda);
+	hash_destruir(alias_estado);
+	hash_destruir(alias_mostrar);*/
 }
 
 int main()
@@ -199,6 +206,6 @@ int main()
 		seguir = menu_ejecutar_comando(menu, comando, hospitales);
 	}
 
-	menu_destruir_todo(menu, free);
+	//menu_destruir_todo(menu, free);
 	return 0;
 }
