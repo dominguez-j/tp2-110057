@@ -10,9 +10,11 @@ valgrind-chanutron: pruebas_chanutron
 pruebas_chanutron: src/*.c pruebas_chanutron.c
 	$(CC) $(CFLAGS) src/*.c pruebas_chanutron.c -o pruebas_chanutron
 
+valgrind-ejemplo : ejemplo
+	valgrind $(VALGRIND_FLAGS) ./tp2
 
 ejemplo: src/*.c tp2.c
 	$(CC) $(CFLAGS) src/*.c tp2.c -o tp2
-
+	
 clean:
 	rm -f pruebas_alumno pruebas_chanutron tp2

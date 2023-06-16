@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include "hash.h"
 
 typedef struct comando comando_t;
 typedef struct menu menu_t;
@@ -11,17 +12,33 @@ typedef struct menu menu_t;
  * Crea un comando reservando la memoria necesaria para él.
  * Devuelve el puntero a comando o NULL en caso de error.
 */
-comando_t *comando_crear(const char *cmd, const char *doc, bool (*ejecutar)(void*, void*), bool es_alias);
+comando_t *comando_crear(const char *cmd, const char *doc, const char *doc_aux,
+			 bool (*ejecutar)(void *, void *), hash_t *alias);
+
+/**
+ * 
+*/
+void comando_destruir(comando_t *comando);
+
+/**
+ * 
+*/
+void comando_destruir_todo(comando_t *comando, void (*destructor)(void *));
+
+/*
+* Muestra el menú de ayuda con sus comandos y alias.
+*/
+void menu_ayuda_mostrar(menu_t *menu);
 
 /*
 * Muestra el menú con sus comandos.
 */
-void menu_mostrar(menu_t *menu, const char *nombre_menu);
+void menu_mostrar(menu_t *menu);
 
 /**
  * Crea el menú reservando la memoria necesaria para el.
 */
-menu_t *menu_crear();
+menu_t *menu_crear(const char *nombre_menu);
 
 /**
  * Agrega un comando al menú.
@@ -50,7 +67,7 @@ comando_t *menu_contiene_comando(menu_t *menu, const char *cmd);
 /**
  * 
 */
-bool menu_ejecutar_comando(menu_t *menu, const char *cmd);
+bool menu_ejecutar_comando(menu_t *menu, const char *cmd, void *aux);
 
 /**
  * Destruye el menu liberando la memoria reservada.

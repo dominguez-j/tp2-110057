@@ -4,9 +4,13 @@
 #include <stdio.h>
 #include <string.h>
 
-char *leer_interaccion(char *buffer, size_t tam)
+#define MIN_ALIAS 5
+#define AMARILLO "\x1b[33;1m"
+#define RESET "\033[0m"
+
+char *leer_interaccion(char *buffer, int tam)
 {
-        printf("Ingrese una opción: \n");
+	printf(AMARILLO"Ingrese una opción: \n"RESET);
 	char *respuesta = fgets(buffer, tam, stdin);
 	if (respuesta)
 		respuesta[strlen(respuesta) - 1] = 0;
@@ -14,106 +18,187 @@ char *leer_interaccion(char *buffer, size_t tam)
 	return respuesta;
 }
 
-bool ejecutar_salir(void *aux, void *aux2)
+/**
+* 
+*/
+bool ejecutar_salir(void *menu, void *hospitales)
 {
-        return true;
+	menu_destruir_todo((menu_t*)menu, free);
+	return false;
 }
 
-bool ejecutar_ayuda(void *aux, void *aux2)
+/**
+*
+*/
+bool ejecutar_ayuda(void *menu, void *hospitales)
 {
-        return true;
+	menu_ayuda_mostrar(menu);
+	return true;
 }
 
-bool ejecutar_cargar(void *aux, void *aux2)
+/**
+*
+*/
+bool ejecutar_cargar(void *menu, void *hospitales)
 {
-        return true;
+	return true;
 }
 
-bool ejecutar_estado(void *aux, void *aux2)
+/**
+ * 
+*/
+bool ejecutar_estado(void *menu, void *hospitales)
 {
-        return true;
+	return true;
 }
 
-bool ejecutar_activar(void *aux, void *aux2)
+/**
+ * 
+*/
+bool ejecutar_activar(void *menu, void *hospitales)
 {
-        return true;
+	return true;
 }
 
-bool ejecutar_mostrar(void *aux, void *aux2)
+/**
+ * 
+*/
+bool ejecutar_mostrar(void *menu, void *hospitales)
 {
-        return true;
+	return true;
 }
 
-bool ejecutar_listar(void *aux, void *aux2)
+/**
+ * 
+*/
+bool ejecutar_listar(void *menu, void *hospitales)
 {
-        return true;
+	return true;
 }
 
-bool ejecutar_destruir(void *aux, void *aux2)
+/**
+ * 
+*/
+bool ejecutar_destruir(void *menu, void *hospitales)
 {
-        return true;
+	return true;
 }
 
 void agregar_comandos(menu_t *menu)
 {
-        menu = menu_agregar_comando(menu, comando_crear("S", "Sale del programa", ejecutar_salir, false));
-        menu = menu_agregar_comando(menu, comando_crear("SALIR", "Sale del programa", ejecutar_salir, true));
-        menu = menu_agregar_comando(menu, comando_crear("s", "Sale del programa", ejecutar_salir, true));
-        menu = menu_agregar_comando(menu, comando_crear("salir", "Sale del programa", ejecutar_salir, true));
-        menu = menu_agregar_comando(menu, comando_crear("exit", "Sale del programa", ejecutar_salir, true));
+	hash_t *alias_salir = hash_crear(MIN_ALIAS);
+	hash_insertar(alias_salir, "SALIR", NULL, NULL);
+	hash_insertar(alias_salir, "salir", NULL, NULL);
+	hash_insertar(alias_salir, "s", NULL, NULL);
+	hash_insertar(alias_salir, "exit", NULL, NULL);
+	menu_agregar_comando(
+		menu,
+		comando_crear(
+			"S", "Sale del programa",
+			"Sale del programa, liberando toda la memoria ocupada por el programa",
+			ejecutar_salir, alias_salir));
 
-        menu = menu_agregar_comando(menu, comando_crear("H", "Muestra el menu de ayuda", ejecutar_ayuda, false));
-        menu = menu_agregar_comando(menu, comando_crear("h", "Muestra el menu de ayuda", ejecutar_ayuda, true));
-        menu = menu_agregar_comando(menu, comando_crear("help", "Muestra el menu de ayuda", ejecutar_ayuda, true));
-        menu = menu_agregar_comando(menu, comando_crear("ayuda", "Muestra el menu de ayuda", ejecutar_ayuda, true));
-        menu = menu_agregar_comando(menu, comando_crear("AYUDA", "Muestra el menu de ayuda", ejecutar_ayuda, true));
-        menu = menu_agregar_comando(menu, comando_crear("HELP", "Muestra el menu de ayuda", ejecutar_ayuda, true));
+	hash_t *alias_ayuda = hash_crear(MIN_ALIAS);
+	hash_insertar(alias_ayuda, "h", "h", NULL);
+	hash_insertar(alias_ayuda, "help", NULL, NULL);
+	hash_insertar(alias_ayuda, "ayuda", NULL, NULL);
+	hash_insertar(alias_ayuda, "AYUDA", NULL, NULL);
 
-        menu = menu_agregar_comando(menu, comando_crear("C", "Cargar hospital", ejecutar_cargar, false));
-        menu = menu_agregar_comando(menu, comando_crear("c", "Cargar hospital", ejecutar_cargar, true));
-        menu = menu_agregar_comando(menu, comando_crear("cargar", "Cargar hospital", ejecutar_cargar, true));
-        menu = menu_agregar_comando(menu, comando_crear("CARGAR", "Cargar hospital", ejecutar_cargar, true));
+	menu_agregar_comando(
+		menu,
+		comando_crear(
+			"H", "Muestra el menu de ayuda",
+			"Muestra el menu de ayuda, con todos los comandos y explicaciones ",
+			ejecutar_ayuda, alias_ayuda));
 
-        menu = menu_agregar_comando(menu, comando_crear("E", "Muestra el estado de los hospitales", ejecutar_estado, false));
-        menu = menu_agregar_comando(menu, comando_crear("e", "Muestra el estado de los hospitales", ejecutar_estado, true));
-        menu = menu_agregar_comando(menu, comando_crear("estado", "Muestra el estado de los hospitales", ejecutar_estado, true));
-        menu = menu_agregar_comando(menu, comando_crear("ESTADO", "Muestra el estado de los hospitales", ejecutar_estado, true));
+	hash_t *alias_cargar = hash_crear(MIN_ALIAS);
+	hash_insertar(alias_cargar, "c", NULL, NULL);
+	hash_insertar(alias_cargar, "cargar", NULL, NULL);
+	hash_insertar(alias_cargar, "CARGAR", NULL, NULL);
 
-        menu = menu_agregar_comando(menu, comando_crear("A", "Activa un hospital", ejecutar_activar, false));
-        menu = menu_agregar_comando(menu, comando_crear("a", "Activa un hospital", ejecutar_activar, true));
-        menu = menu_agregar_comando(menu, comando_crear("activar", "Activa un hospital", ejecutar_activar, true));
-        menu = menu_agregar_comando(menu, comando_crear("ACTIVAR", "Activa un hospital", ejecutar_activar, true));
+	menu_agregar_comando(
+		menu,
+		comando_crear(
+			"C", "Cargar hospital",
+			"Pide un nombre de archivo e intenta cargarlo creando un hospital",
+			ejecutar_cargar, alias_cargar));
 
-        menu = menu_agregar_comando(menu, comando_crear("M", "Muestra los hospitales", ejecutar_mostrar, false));
-        menu = menu_agregar_comando(menu, comando_crear("m", "Muestra los hospitales", ejecutar_mostrar, true));
-        menu = menu_agregar_comando(menu, comando_crear("mostrar", "Muestra los hospitales", ejecutar_mostrar, true));
-        menu = menu_agregar_comando(menu, comando_crear("MOSTRAR", "Muestra los hospitales", ejecutar_mostrar, true));
+	hash_t *alias_estado = hash_crear(MIN_ALIAS);
+	hash_insertar(alias_estado, "e", NULL, NULL);
+	hash_insertar(alias_estado, "estado", NULL, NULL);
+	hash_insertar(alias_estado, "ESTADO", NULL, NULL);
 
-        menu = menu_agregar_comando(menu, comando_crear("L", "Lista los hospitales", ejecutar_listar, false));
-        menu = menu_agregar_comando(menu, comando_crear("l", "Lista los hospitales", ejecutar_listar, true));
-        menu = menu_agregar_comando(menu, comando_crear("LISTAR", "Lista los hospitales", ejecutar_listar, true));
-        menu = menu_agregar_comando(menu, comando_crear("listar", "Lista los hospitales", ejecutar_listar, true));
+	menu_agregar_comando(
+		menu,
+		comando_crear(
+			"E", "Muestra el estado de los hospitales",
+			"Muestra un listado con los hospitales cargados (y el activo, si hay alguno)",
+			ejecutar_estado, alias_estado));
 
-        menu = menu_agregar_comando(menu, comando_crear("D", "Destruye un hospital", ejecutar_destruir, false));
-        menu = menu_agregar_comando(menu, comando_crear("d", "Destruye un hospital", ejecutar_destruir, true));
-        menu = menu_agregar_comando(menu, comando_crear("DESTRUIR", "Destruye un hospital", ejecutar_destruir, true));
-        menu = menu_agregar_comando(menu, comando_crear("destruir", "Destruye un hospital", ejecutar_destruir, true));
+	hash_t *alias_activar = hash_crear(MIN_ALIAS);
+	hash_insertar(alias_activar, "a", NULL, NULL);
+	hash_insertar(alias_activar, "activar", NULL, NULL);
+	hash_insertar(alias_activar, "ACTIVAR", NULL, NULL);
+
+	menu_agregar_comando(
+		menu,
+		comando_crear(
+			"A", "Activa un hospital",
+			"Pide un número de identificación y activa el hospital",
+			ejecutar_activar, alias_activar));
+
+	hash_t *alias_mostrar = hash_crear(MIN_ALIAS);
+	hash_insertar(alias_mostrar, "m", NULL, NULL);
+	hash_insertar(alias_mostrar, "mostrar", NULL, NULL);
+	hash_insertar(alias_mostrar, "MOSTRAR", NULL, NULL);
+
+	menu_agregar_comando(
+		menu,
+		comando_crear(
+			"M", "Muestra los hospitales",
+			"Muestra un listado con los nombres de todos los pokemones en el hospital ",
+			ejecutar_mostrar, alias_mostrar));
+
+	hash_t *alias_listar = hash_crear(MIN_ALIAS);
+	hash_insertar(alias_listar, "l", NULL, NULL);
+	hash_insertar(alias_listar, "listar", NULL, NULL);
+	hash_insertar(alias_listar, "LISTAR", NULL, NULL);
+
+	menu_agregar_comando(
+		menu,
+		comando_crear(
+			"L", "Lista los hospitales",
+			"Muestra un listado detallado de todos los pokemones en el hospital",
+			ejecutar_listar, alias_listar));
+
+	hash_t *alias_destruir = hash_crear(MIN_ALIAS);
+	hash_insertar(alias_destruir, "d", NULL, NULL);
+	hash_insertar(alias_destruir, "destruir", NULL, NULL);
+	hash_insertar(alias_destruir, "DESTRUIR", NULL, NULL);
+
+	menu_agregar_comando(
+		menu,
+		comando_crear(
+			"D", "Destruye el hospital activo",
+			"Destruye el hospital activo, liberando toda la memoria ocupada por el mismo",
+			ejecutar_destruir, alias_destruir));
 }
 
 int main()
 {
-        char buffer[512];
-        buffer[0] = 0;
-        char *comando;
-        bool salir = false;
-        menu_t *menu = menu_crear();
-        agregar_comandos(menu);
-        while(!salir){
-                menu_mostrar(menu, "HOSPITAL POKEMONES");
-                comando = leer_interaccion(buffer, 512);
-                salir = menu_ejecutar_comando(menu, comando);
-                free(comando);
-        }
+	char buffer[512];
+	buffer[0] = 0;
+	char *comando;
+	bool seguir = true;
+	menu_t *menu = menu_crear("HOSPITAL POKEMONES");
+	hospital_t **hospitales = NULL;
+	agregar_comandos(menu);
+	while (seguir) {
+		menu_mostrar(menu);
+		comando = leer_interaccion(buffer, 512);
+		seguir = menu_ejecutar_comando(menu, comando, hospitales);
+	}
 
-        return 0;
+	menu_destruir_todo(menu, free);
+	return 0;
 }
