@@ -6,6 +6,8 @@
 #define CANTIDAD_BASE_COMANDOS 15
 #define AZUL "\x1b[34;1m"
 #define AMARILLO "\x1b[33;1m"
+#define VERDE "\x1b[38;5;43m"
+#define ROJO "\x1b[38;5;203m"
 #define RESET "\033[0m"
 
 typedef struct comando_aux {
@@ -67,9 +69,9 @@ bool mostrar_cada_comando_completo(const char *clave, void *cmd, void *aux)
 	bool primer_alias = true;
 	int longitud_menu = *(int *)aux;
 
-	printf(AMARILLO "   %s (", (char *)comando->nombre);
+	printf(VERDE "   %s (", (char *)comando->nombre);
 	hash_con_cada_clave(comando->alias, mostrar_cada_alias, &primer_alias);
-	printf(") : %-.*s \n", longitud_menu - 16,
+	printf(")" AMARILLO" : %-.*s \n", longitud_menu - 16,
 	       (char *)comando->documentacion_completa);
 	printf(AZUL "* %-*s *\n", longitud_menu - 4, "");
 
@@ -86,7 +88,7 @@ void menu_ayuda_mostrar(menu_t *menu)
 	printf("\n");
 	imprimir_linea(longitud_menu);
 	printf("* %-*s *\n", longitud_menu - 4, "");
-	printf("*" AMARILLO "         %-*c MENU DE %-*s  " AZUL "*\n", 35, ' ',
+	printf("*" ROJO "         %-*c MENU DE %-*s  " AZUL "*\n", 35, ' ',
 	       longitud_menu - 57, "AYUDA");
 	printf("* %-*s *\n", longitud_menu - 4, "");
 	imprimir_linea(longitud_menu);
@@ -107,7 +109,7 @@ bool mostrar_cada_comando(const char *clave, void *cmd, void *aux)
 	comando_t *comando = cmd;
 	int longitud_menu = *(int *)aux;
 
-	printf(AMARILLO "     %s : %-*s  \n", (char *)comando->nombre, 35,
+	printf(VERDE "     %s " AMARILLO": %-*s  \n", (char *)comando->nombre, 35,
 	       (char *)comando->documentacion);
 	printf(AZUL "* %-*s *\n", longitud_menu - 4, "");
 
@@ -124,7 +126,7 @@ void menu_mostrar(menu_t *menu)
 	printf("\n");
 	imprimir_linea(longitud_menu);
 	printf("* %-*s *\n", longitud_menu - 4, "");
-	printf("*" AMARILLO "           MENU DE %-*s  " AZUL "*\n",
+	printf("*" ROJO "           MENU DE %-*s  " AZUL "*\n",
 	       longitud_menu - 23, menu->nombre_menu);
 	printf("* %-*s *\n", longitud_menu - 4, "");
 	imprimir_linea(longitud_menu);

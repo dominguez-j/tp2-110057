@@ -10,7 +10,7 @@
 
 char *leer_interaccion(char *buffer, int tam)
 {
-	printf(AMARILLO"Ingrese una opción: \n"RESET);
+	printf(AMARILLO "Ingrese una opción: \n" RESET);
 	char *respuesta = fgets(buffer, tam, stdin);
 	if (respuesta)
 		respuesta[strlen(respuesta) - 1] = 0;
@@ -23,7 +23,7 @@ char *leer_interaccion(char *buffer, int tam)
 */
 bool ejecutar_salir(void *menu, void *hospitales)
 {
-	menu_destruir((menu_t*)menu);
+	menu_destruir((menu_t *)menu);
 	return false;
 }
 
@@ -33,7 +33,11 @@ bool ejecutar_salir(void *menu, void *hospitales)
 bool ejecutar_ayuda(void *menu, void *hospitales)
 {
 	menu_ayuda_mostrar(menu);
-	return true;
+
+	char buffer[512];
+	buffer[0] = 0;
+	char *comando = leer_interaccion(buffer, 512);
+	return menu_ejecutar_comando(menu, comando, hospitales);
 }
 
 /**
@@ -94,8 +98,8 @@ void agregar_comandos(menu_t *menu)
 	menu_agregar_comando(
 		menu,
 		comando_crear(
-			"S", "Sale del programa",
-			"Sale del programa, liberando toda la memoria ocupada por el programa",
+			"S", "Salir del programa",
+			"Sale del programa, liberando toda la memoria ocupada por el mismo",
 			ejecutar_salir, alias_salir));
 
 	hash_t *alias_ayuda = hash_crear(MIN_ALIAS);
@@ -107,7 +111,7 @@ void agregar_comandos(menu_t *menu)
 	menu_agregar_comando(
 		menu,
 		comando_crear(
-			"H", "Muestra el menu de ayuda",
+			"H", "Mostrar menu de ayuda",
 			"Muestra el menu de ayuda, con todos los comandos y explicaciones ",
 			ejecutar_ayuda, alias_ayuda));
 
@@ -131,7 +135,7 @@ void agregar_comandos(menu_t *menu)
 	menu_agregar_comando(
 		menu,
 		comando_crear(
-			"E", "Muestra el estado de los hospitales",
+			"E", "Mostrar estado de los hospitales",
 			"Muestra un listado con los hospitales cargados (y el activo, si hay alguno)",
 			ejecutar_estado, alias_estado));
 
@@ -143,7 +147,7 @@ void agregar_comandos(menu_t *menu)
 	menu_agregar_comando(
 		menu,
 		comando_crear(
-			"A", "Activa un hospital",
+			"A", "Activar hospital",
 			"Pide un número de identificación y activa el hospital",
 			ejecutar_activar, alias_activar));
 
@@ -155,7 +159,7 @@ void agregar_comandos(menu_t *menu)
 	menu_agregar_comando(
 		menu,
 		comando_crear(
-			"M", "Muestra los hospitales",
+			"M", "Mostrar hospitales",
 			"Muestra un listado con los nombres de todos los pokemones en el hospital ",
 			ejecutar_mostrar, alias_mostrar));
 
@@ -167,7 +171,7 @@ void agregar_comandos(menu_t *menu)
 	menu_agregar_comando(
 		menu,
 		comando_crear(
-			"L", "Lista los hospitales",
+			"L", "Listar hospitales",
 			"Muestra un listado detallado de todos los pokemones en el hospital",
 			ejecutar_listar, alias_listar));
 
@@ -179,16 +183,9 @@ void agregar_comandos(menu_t *menu)
 	menu_agregar_comando(
 		menu,
 		comando_crear(
-			"D", "Destruye el hospital activo",
+			"D", "Destruir hospital activo",
 			"Destruye el hospital activo, liberando toda la memoria ocupada por el mismo",
 			ejecutar_destruir, alias_destruir));
-
-	/*hash_destruir(alias_activar);
-	hash_destruir(alias_listar);
-	hash_destruir(alias_destruir);
-	hash_destruir(alias_ayuda);
-	hash_destruir(alias_estado);
-	hash_destruir(alias_mostrar);*/
 }
 
 int main()
@@ -205,7 +202,5 @@ int main()
 		comando = leer_interaccion(buffer, 512);
 		seguir = menu_ejecutar_comando(menu, comando, hospitales);
 	}
-
-	//menu_destruir_todo(menu, free);
 	return 0;
 }
