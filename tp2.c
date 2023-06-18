@@ -9,6 +9,7 @@
 #define AMARILLO "\x1b[33;1m"
 #define VERDE "\x1b[32;1m"
 #define ROJO "\x1b[31;1m"
+#define NARANJA "\x1b[38;5;208m"
 #define RESET "\033[0m"
 
 typedef struct buffer {
@@ -50,6 +51,7 @@ bool centro_destruir_todo(void *elemento, void *aux)
 	centro_t *centro = elemento;
 
 	hospital_destruir(centro->hospital);
+	free(centro->nombre_hospital);
 	free(centro);
 
 	return true;
@@ -82,6 +84,17 @@ bool ejecutar_ayuda(void *menu, void *aux, void *buffer)
 }
 
 /**
+ * Se crea una copia del nombre y se la devuelve. Caso contrario, se retorna NULL.
+*/
+char *copiar_nombre(char *nombre)
+{
+	char *copia_nombre = malloc(strlen(nombre) + 1);
+	if (!copia_nombre)
+		return NULL;
+	return strcpy(copia_nombre, nombre);
+}
+
+/**
 * Se encarga de cargar la direccion del archivo en un centro.
 * Retorna true, se haya cargado bien o no.
 */
@@ -111,14 +124,14 @@ bool ejecutar_cargar(void *menu, void *centros, void *buffer)
 		hospital_destruir(hospital_aux);
 		return true;
 	}
-	centro->nombre_hospital = archivo;
+	centro->nombre_hospital = copiar_nombre(archivo);
 	centro->activo = false;
 	centro->hospital = hospital_aux;
 
 	sistema_hospitales_t *sistema = centros;
 	lista_insertar(sistema->hospitales, centro);
 	printf(VERDE
-	       "\nHospital cargado con éxito.\nID: %zu - NOMBRE: %s\n" RESET,
+	       "\nHospital cargado con éxito.\n"AMARILLO"ID: "NARANJA"%zu"AMARILLO" Nombre: "NARANJA"%s\n" RESET,
 	       lista_tamanio(sistema->hospitales), centro->nombre_hospital);
 
 	return true;
@@ -138,7 +151,7 @@ bool estado_hospitales(void *hospital, void *aux)
 	if (centro->activo)
 		strcpy(estado, "ACTIVO");
 
-	printf(VERDE "\nNombre hospital: %s  ID: %zu  Estado: %s\n",
+	printf(AMARILLO "\nNombre hospital: "NARANJA"%s"AMARILLO" ID: "NARANJA"%zu"AMARILLO" Estado: "NARANJA"%s\n",
 	       centro->nombre_hospital, *id, estado);
 	(*id)++;
 	return true;
@@ -163,7 +176,7 @@ bool ejecutar_estado(void *menu, void *centros, void *aux2)
 		printf("Volviendo al menu principal...\n" RESET);
 		return true;
 	}
-	size_t id = 0;
+	size_t id = 1;
 	lista_con_cada_elemento(sistema->hospitales, estado_hospitales, &id);
 
 	return true;
@@ -210,7 +223,7 @@ bool ejecutar_activar(void *menu, void *centros, void *buffer)
 	sistema->hospital_activo->activo = true;
 
 	printf(VERDE
-	       "\nHospital activado con éxito.\n ID: %zu - NOMBRE: %s\n" RESET,
+	       "\nHospital activado con éxito.\n"AMARILLO"ID: "NARANJA"%zu"AMARILLO" Nombre: "NARANJA"%s\n" RESET,
 	       sistema->id_hospital_activo + 1,
 	       sistema->hospital_activo->nombre_hospital);
 
@@ -218,7 +231,8 @@ bool ejecutar_activar(void *menu, void *centros, void *buffer)
 }
 
 /**
- * 
+ * Muestra por pantalla los pokemones con su información.
+ * En caso de error retorna false. Sino, true.
 */
 bool imprimir_pokemones(pokemon_t *poke, void *aux)
 {
@@ -228,12 +242,11 @@ bool imprimir_pokemones(pokemon_t *poke, void *aux)
 	bool completo = *(bool *)aux;
 
 	if (completo)
-		printf(VERDE
-		       "NOMBRE: %s  ID: %zu  SALUD: %zu  NOMBRE ENTRENADO: %s\n",
-		       pokemon_nombre(poke), pokemon_id(poke),
+		printf(AMARILLO "Nombre: "NARANJA"%s"AMARILLO" ID: "NARANJA"%zu"AMARILLO" Salud: "NARANJA"%zu"AMARILLO" Nombre entrenador: "NARANJA"%s\n",
+		       pokemon_nombre(poke),pokemon_id(poke),
 		       pokemon_salud(poke), pokemon_entrenador(poke));
 	else
-		printf(VERDE "NOMBRE: %s\n", pokemon_nombre(poke));
+		printf(AMARILLO "Nombre: "NARANJA"%s\n", pokemon_nombre(poke));
 
 	return true;
 }
@@ -305,8 +318,9 @@ bool destruir_hospital(void *hospital, void *aux)
 	if (centro->activo) {
 		hospital_destruir(centro->hospital);
 		printf(VERDE
-		       "\nHospital destruido con éxito.\nNOMBRE: %s  ID: %zu\n" RESET,
+		       "\nHospital destruido con éxito.\n"AMARILLO"Nombre: "NARANJA"%s"AMARILLO" ID: "NARANJA"%zu\n" RESET,
 		       centro->nombre_hospital, id);
+		free(centro->nombre_hospital);
 		return false;
 	}
 	return true;
@@ -336,8 +350,10 @@ bool ejecutar_destruir(void *menu, void *centros, void *aux2)
 				&sistema->id_hospital_activo);
 	lista_quitar_de_posicion(sistema->hospitales,
 				 sistema->id_hospital_activo);
+	free(sistema->hospital_activo);
+	sistema->id_hospital_activo = 0;
 
-	printf(VERDE "Se actualizaron las ID: \n" RESET);
+	printf(VERDE "\nSe actualizaron las ID de los hospitales:" RESET);
 	ejecutar_estado(menu, centros, aux2);
 	return true;
 }
