@@ -13,7 +13,7 @@ typedef struct menu menu_t;
  * Devuelve el puntero a comando o NULL en caso de error.
 */
 comando_t *comando_crear(void *cmd, void *doc, void *doc_aux,
-			 bool (*ejecutar)(void *, void *), hash_t *alias);
+			 bool (*ejecutar)(void *, void *, void *), hash_t *alias);
 
 /*
 * Muestra el menú de ayuda con sus comandos y alias.
@@ -46,7 +46,7 @@ comando_t *menu_contiene_comando(menu_t *menu, void *cmd);
  * Se ejecuta un comando y retorna true.
  * Caso contrario o de error, se retorna false.
 */
-bool menu_ejecutar_comando(menu_t *menu, void *cmd, void *aux);
+bool menu_ejecutar_comando(menu_t *menu, void *cmd, void *aux, void *aux2);
 
 /**
  * Destruye el menu liberando toda la memoria ocupada por el mismo.

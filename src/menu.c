@@ -7,7 +7,7 @@
 #define AZUL "\x1b[34;1m"
 #define AMARILLO "\x1b[33;1m"
 #define VERDE "\x1b[38;5;43m"
-#define ROJO "\x1b[38;5;203m"
+#define NARANJA "\x1b[38;5;208m"
 #define RESET "\033[0m"
 
 typedef struct comando_aux {
@@ -20,7 +20,7 @@ struct comando {
 	void *documentacion;
 	void *documentacion_completa;
 	hash_t *alias;
-	bool (*ejecutar)(void *, void *);
+	bool (*ejecutar)(void *, void *, void *);
 };
 
 struct menu {
@@ -88,7 +88,7 @@ void menu_ayuda_mostrar(menu_t *menu)
 	printf("\n");
 	imprimir_linea(longitud_menu);
 	printf("* %-*s *\n", longitud_menu - 4, "");
-	printf("*" ROJO "         %-*c MENU DE %-*s  " AZUL "*\n", 35, ' ',
+	printf("*" NARANJA "         %-*c MENU DE %-*s  " AZUL "*\n", 35, ' ',
 	       longitud_menu - 57, "AYUDA");
 	printf("* %-*s *\n", longitud_menu - 4, "");
 	imprimir_linea(longitud_menu);
@@ -99,7 +99,8 @@ void menu_ayuda_mostrar(menu_t *menu)
 }
 
 /**
- * 
+ * Se encarga de mostrar por pantalla cada comando que recibe.
+ * Si no hay comando, retorna false. Caso contrario true.
 */
 bool mostrar_cada_comando(const char *clave, void *cmd, void *aux)
 {
@@ -126,7 +127,7 @@ void menu_mostrar(menu_t *menu)
 	printf("\n");
 	imprimir_linea(longitud_menu);
 	printf("* %-*s *\n", longitud_menu - 4, "");
-	printf("*" ROJO "           MENU DE %-*s  " AZUL "*\n",
+	printf("*" NARANJA "           MENU DE %-*s  " AZUL "*\n",
 	       longitud_menu - 23, menu->nombre_menu);
 	printf("* %-*s *\n", longitud_menu - 4, "");
 	imprimir_linea(longitud_menu);
@@ -137,7 +138,7 @@ void menu_mostrar(menu_t *menu)
 }
 
 comando_t *comando_crear(void *cmd, void *doc, void *doc_aux,
-			 bool (*ejecutar)(void *, void *), hash_t *alias)
+			 bool (*ejecutar)(void *, void *, void *), hash_t *alias)
 {
 	if (!cmd || !doc || !ejecutar)
 		return NULL;
@@ -161,8 +162,7 @@ comando_t *comando_crear(void *cmd, void *doc, void *doc_aux,
 */
 void comando_destruir(comando_t *comando)
 {
-	if (comando)
-		free(comando);
+	free(comando);
 }
 
 menu_t *menu_crear(void *nombre_menu)
@@ -195,8 +195,7 @@ menu_t *menu_agregar_comando(menu_t *menu, comando_t *comando)
 	if (!menu || !comando)
 		return NULL;
 
-	menu->comandos =
-		hash_insertar(menu->comandos, comando->nombre, comando, NULL);
+	hash_insertar(menu->comandos, comando->nombre, comando, NULL);
 
 	if (!menu->comandos)
 		return NULL;
@@ -240,7 +239,7 @@ comando_t *menu_contiene_comando(menu_t *menu, void *cmd)
 	return aux.comando;
 }
 
-bool menu_ejecutar_comando(menu_t *menu, void *cmd, void *aux)
+bool menu_ejecutar_comando(menu_t *menu, void *cmd, void *aux, void *aux2)
 {
 	if (!menu || !cmd)
 		return NULL;
@@ -248,7 +247,7 @@ bool menu_ejecutar_comando(menu_t *menu, void *cmd, void *aux)
 	comando_t *comando = menu_contiene_comando(menu, cmd);
 
 	if (comando)
-		return comando->ejecutar(menu, aux);
+		return comando->ejecutar(menu, aux, aux2);
 
 	printf(AMARILLO
 	       "Comando inexistente, por favor use el comando de ayuda\n" RESET);

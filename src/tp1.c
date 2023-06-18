@@ -1,10 +1,10 @@
 #include "tp1.h"
-
 #include "pokemon.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 const int MAX_LINEA = 30;
 
 struct _hospital_pkm_t {
@@ -48,12 +48,12 @@ hospital_t *hospital_crear_desde_archivo(const char *nombre_archivo)
 	char linea[MAX_LINEA];
 	char *fila = fgets(linea, MAX_LINEA, archivo_pokemones);
 
-	if (!fila) {
+	if(!fila){
 		fclose(archivo_pokemones);
 		return NULL;
 	}
 
-	hospital_t *hospital = malloc(sizeof(hospital_t));
+	hospital_t *hospital = calloc(1, sizeof(hospital_t));
 
 	if (!hospital) {
 		fclose(archivo_pokemones);
@@ -63,7 +63,7 @@ hospital_t *hospital_crear_desde_archivo(const char *nombre_archivo)
 	size_t tamanio = 0;
 	pokemon_t **poke_aux = NULL;
 
-	while (fila != NULL) {
+	while (fila) {
 		poke_aux =
 			realloc(poke_aux, (tamanio + 1) * sizeof(pokemon_t *));
 		if (!poke_aux) {
@@ -71,7 +71,14 @@ hospital_t *hospital_crear_desde_archivo(const char *nombre_archivo)
 			fclose(archivo_pokemones);
 			return NULL;
 		}
+
 		poke_aux[tamanio] = pokemon_crear_desde_string(linea);
+		if (!poke_aux[tamanio]) {
+			hospital_destruir(hospital);
+			fclose(archivo_pokemones);
+			return NULL;
+		}
+
 		tamanio++;
 		fila = fgets(linea, MAX_LINEA, archivo_pokemones);
 	}
@@ -155,6 +162,9 @@ pokemon_t *hospital_obtener_pokemon(hospital_t *hospital, size_t prioridad)
 
 void hospital_destruir(hospital_t *hospital)
 {
+	if(!hospital)
+		return;
+
 	for (size_t i = 0; i < hospital->cantidad_pokemon; i++)
 		pokemon_destruir(hospital->pokemones[i]);
 
