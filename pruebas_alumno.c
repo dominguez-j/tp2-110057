@@ -262,12 +262,14 @@ void ejecutar_comando_valido_con_cosas_null_o_inexistentes()
 	menu_agregar_comando(menu, cmd1);
 
 	size_t n = 0;
-	pa2m_afirmar(menu_ejecutar_comando(menu, NULL, NULL, &n),
-		     "No se ejecutó la función de un comando NULL y devolvió true");
+	pa2m_afirmar(
+		menu_ejecutar_comando(menu, NULL, NULL, &n),
+		"No se ejecutó la función de un comando NULL y devolvió true");
 	pa2m_afirmar(n != 2, "No se contó hasta dos");
 
-	pa2m_afirmar(menu_ejecutar_comando(menu, "A", NULL, &n),
-		     "No se ejecutó la función de un comando inexistente y devolvió true");
+	pa2m_afirmar(
+		menu_ejecutar_comando(menu, "A", NULL, &n),
+		"No se ejecutó la función de un comando inexistente y devolvió true");
 	pa2m_afirmar(n != 2, "No se contó hasta dos");
 
 	menu_destruir(menu);
@@ -454,7 +456,7 @@ void pruebas_creación_y_destruccion()
 {
 	destruir_menu_con_comandos_y_alias_no_es_error();
 	destruir_menu_con_comandos_y_alias_null_no_es_error();
-}	
+}
 
 int main()
 {

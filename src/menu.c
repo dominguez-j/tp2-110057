@@ -180,7 +180,7 @@ hash_t *comando_alias(comando_t *cmd)
 
 void comando_destruir(comando_t *comando)
 {
-	if(!comando)
+	if (!comando)
 		return;
 
 	hash_destruir(comando->alias);
@@ -227,7 +227,7 @@ menu_t *menu_agregar_comando(menu_t *menu, comando_t *cmd)
 
 char *menu_nombre(menu_t *menu)
 {
-	return !menu ? NULL :menu->nombre_menu;
+	return !menu ? NULL : menu->nombre_menu;
 }
 
 size_t menu_cantidad(menu_t *menu)
@@ -287,8 +287,8 @@ bool menu_ejecutar_comando(menu_t *menu, void *cmd, void *aux, void *aux2)
 }
 
 size_t menu_con_cada_comando(menu_t *menu,
-			     bool (*f)(const char *nombre_comando, void *comando,
-				       void *aux),
+			     bool (*f)(const char *nombre_comando,
+				       void *comando, void *aux),
 			     void *aux)
 {
 	return !menu || !f ? 0 : hash_con_cada_clave(menu->comandos, f, aux);

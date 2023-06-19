@@ -107,8 +107,8 @@ void menu_destruir(menu_t *menu);
  *
  */
 size_t menu_con_cada_comando(menu_t *menu,
-			     bool (*f)(const char *nombre_comando, void *comando,
-				       void *aux),
+			     bool (*f)(const char *nombre_comando,
+				       void *comando, void *aux),
 			     void *aux);
 
 #endif // MENU_H_

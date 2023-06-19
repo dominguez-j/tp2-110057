@@ -269,7 +269,8 @@ bool ejecutar_mostrar(void *menu, void *centros, void *aux2)
 	}
 
 	sistema_hospitales_t *sistema = centros;
-	if (!sistema->hospital_activo || !sistema || !sistema->hospital_activo->hospital) {
+	if (!sistema->hospital_activo || !sistema ||
+	    !sistema->hospital_activo->hospital) {
 		printf(ROJO "\nNo hay ningun hospital activo para mostrar.\n");
 		printf("Volviendo al menu principal...\n" RESET);
 		return true;
@@ -294,7 +295,8 @@ bool ejecutar_listar(void *menu, void *centros, void *aux2)
 	}
 
 	sistema_hospitales_t *sistema = centros;
-	if (!sistema->hospital_activo || !sistema || !sistema->hospital_activo->hospital) {
+	if (!sistema->hospital_activo || !sistema ||
+	    !sistema->hospital_activo->hospital) {
 		printf(ROJO "\nNo hay ningun hospital activo para listar.\n");
 		printf("Volviendo al menu principal...\n" RESET);
 		return true;
@@ -328,13 +330,14 @@ bool ejecutar_destruir(void *menu, void *centros, void *aux2)
 	}
 
 	lista_quitar_de_posicion(sistema->hospitales,
-					 sistema->id_hospital_activo);
+				 sistema->id_hospital_activo);
 
 	printf(VERDE "\nHospital destruido con éxito.\n" AMARILLO
-			     "Nombre: " NARANJA "%s" AMARILLO " ID: " NARANJA
-			     "%zu\n" RESET,
-		       sistema->hospital_activo->nombre_hospital, sistema->id_hospital_activo +1);
-	
+		     "Nombre: " NARANJA "%s" AMARILLO " ID: " NARANJA
+		     "%zu\n" RESET,
+	       sistema->hospital_activo->nombre_hospital,
+	       sistema->id_hospital_activo + 1);
+
 	centro_destruir_todo(sistema->hospital_activo, NULL);
 	sistema->hospital_activo = NULL;
 	sistema->id_hospital_activo = 0;

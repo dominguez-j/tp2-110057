@@ -48,7 +48,7 @@ hospital_t *hospital_crear_desde_archivo(const char *nombre_archivo)
 	char linea[MAX_LINEA];
 	char *fila = fgets(linea, MAX_LINEA, archivo_pokemones);
 
-	if(!fila){
+	if (!fila) {
 		fclose(archivo_pokemones);
 		return NULL;
 	}
@@ -162,7 +162,7 @@ pokemon_t *hospital_obtener_pokemon(hospital_t *hospital, size_t prioridad)
 
 void hospital_destruir(hospital_t *hospital)
 {
-	if(!hospital)
+	if (!hospital)
 		return;
 
 	for (size_t i = 0; i < hospital->cantidad_pokemon; i++)
