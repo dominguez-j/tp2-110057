@@ -130,8 +130,8 @@ bool ejecutar_cargar(void *menu, void *centros, void *buffer)
 
 	sistema_hospitales_t *sistema = centros;
 	lista_insertar(sistema->hospitales, centro);
-	printf(VERDE
-	       "\nHospital cargado con éxito.\n"AMARILLO"ID: "NARANJA"%zu"AMARILLO" Nombre: "NARANJA"%s\n" RESET,
+	printf(VERDE "\nHospital cargado con éxito.\n" AMARILLO "ID: " NARANJA
+		     "%zu" AMARILLO " Nombre: " NARANJA "%s\n" RESET,
 	       lista_tamanio(sistema->hospitales), centro->nombre_hospital);
 
 	return true;
@@ -151,7 +151,9 @@ bool estado_hospitales(void *hospital, void *aux)
 	if (centro->activo)
 		strcpy(estado, "ACTIVO");
 
-	printf(AMARILLO "\nNombre hospital: "NARANJA"%s"AMARILLO" ID: "NARANJA"%zu"AMARILLO" Estado: "NARANJA"%s\n",
+	printf(AMARILLO "\nNombre hospital: " NARANJA "%s" AMARILLO
+			" ID: " NARANJA "%zu" AMARILLO " Estado: " NARANJA
+			"%s\n",
 	       centro->nombre_hospital, *id, estado);
 	(*id)++;
 	return true;
@@ -222,8 +224,8 @@ bool ejecutar_activar(void *menu, void *centros, void *buffer)
 		sistema->hospitales, sistema->id_hospital_activo);
 	sistema->hospital_activo->activo = true;
 
-	printf(VERDE
-	       "\nHospital activado con éxito.\n"AMARILLO"ID: "NARANJA"%zu"AMARILLO" Nombre: "NARANJA"%s\n" RESET,
+	printf(VERDE "\nHospital activado con éxito.\n" AMARILLO "ID: " NARANJA
+		     "%zu" AMARILLO " Nombre: " NARANJA "%s\n" RESET,
 	       sistema->id_hospital_activo + 1,
 	       sistema->hospital_activo->nombre_hospital);
 
@@ -242,11 +244,14 @@ bool imprimir_pokemones(pokemon_t *poke, void *aux)
 	bool completo = *(bool *)aux;
 
 	if (completo)
-		printf(AMARILLO "Nombre: "NARANJA"%s"AMARILLO" ID: "NARANJA"%zu"AMARILLO" Salud: "NARANJA"%zu"AMARILLO" Nombre entrenador: "NARANJA"%s\n",
-		       pokemon_nombre(poke),pokemon_id(poke),
+		printf(AMARILLO "Nombre: " NARANJA "%s" AMARILLO " ID: " NARANJA
+				"%zu" AMARILLO " Salud: " NARANJA "%zu" AMARILLO
+				" Nombre entrenador: " NARANJA "%s\n",
+		       pokemon_nombre(poke), pokemon_id(poke),
 		       pokemon_salud(poke), pokemon_entrenador(poke));
 	else
-		printf(AMARILLO "Nombre: "NARANJA"%s\n", pokemon_nombre(poke));
+		printf(AMARILLO "Nombre: " NARANJA "%s\n",
+		       pokemon_nombre(poke));
 
 	return true;
 }
@@ -264,15 +269,14 @@ bool ejecutar_mostrar(void *menu, void *centros, void *aux2)
 	}
 
 	sistema_hospitales_t *sistema = centros;
-
-	if (!sistema->hospital_activo) {
+	if (!sistema->hospital_activo || !sistema || !sistema->hospital_activo->hospital) {
 		printf(ROJO "\nNo hay ningun hospital activo para mostrar.\n");
 		printf("Volviendo al menu principal...\n" RESET);
 		return true;
 	}
 	bool completo = false;
-	hospital_a_cada_pokemon(sistema->hospital_activo->hospital, imprimir_pokemones,
-				&completo);
+	hospital_a_cada_pokemon(sistema->hospital_activo->hospital,
+				imprimir_pokemones, &completo);
 
 	return true;
 }
@@ -290,39 +294,16 @@ bool ejecutar_listar(void *menu, void *centros, void *aux2)
 	}
 
 	sistema_hospitales_t *sistema = centros;
-
-	if (!sistema->hospital_activo) {
+	if (!sistema->hospital_activo || !sistema || !sistema->hospital_activo->hospital) {
 		printf(ROJO "\nNo hay ningun hospital activo para listar.\n");
 		printf("Volviendo al menu principal...\n" RESET);
 		return true;
 	}
 
 	bool completo = true;
-	hospital_a_cada_pokemon(sistema->hospital_activo->hospital, imprimir_pokemones,
-				&completo);
+	hospital_a_cada_pokemon(sistema->hospital_activo->hospital,
+				imprimir_pokemones, &completo);
 
-	return true;
-}
-
-/**
- * 
-*/
-bool destruir_hospital(void *hospital, void *aux)
-{
-	if (!hospital)
-		return false;
-
-	centro_t *centro = hospital;
-	size_t id = *(size_t *)aux + 1;
-
-	if (centro->activo) {
-		hospital_destruir(centro->hospital);
-		printf(VERDE
-		       "\nHospital destruido con éxito.\n"AMARILLO"Nombre: "NARANJA"%s"AMARILLO" ID: "NARANJA"%zu\n" RESET,
-		       centro->nombre_hospital, id);
-		free(centro->nombre_hospital);
-		return false;
-	}
 	return true;
 }
 
@@ -346,11 +327,16 @@ bool ejecutar_destruir(void *menu, void *centros, void *aux2)
 		return true;
 	}
 
-	lista_con_cada_elemento(sistema->hospitales, destruir_hospital,
-				&sistema->id_hospital_activo);
 	lista_quitar_de_posicion(sistema->hospitales,
-				 sistema->id_hospital_activo);
-	free(sistema->hospital_activo);
+					 sistema->id_hospital_activo);
+
+	printf(VERDE "\nHospital destruido con éxito.\n" AMARILLO
+			     "Nombre: " NARANJA "%s" AMARILLO " ID: " NARANJA
+			     "%zu\n" RESET,
+		       sistema->hospital_activo->nombre_hospital, sistema->id_hospital_activo +1);
+	
+	centro_destruir_todo(sistema->hospital_activo, NULL);
+	sistema->hospital_activo = NULL;
 	sistema->id_hospital_activo = 0;
 
 	printf(VERDE "\nSe actualizaron las ID de los hospitales:" RESET);
