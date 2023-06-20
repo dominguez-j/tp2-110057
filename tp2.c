@@ -1,12 +1,14 @@
 #include "src/tp1.h"
 #include "src/menu.h"
-#include "src/lista.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 
+#define MAX_BUFFER 100
 #define MIN_ALIAS 5
+#define MIN_HOSPITALES 3
+#define MAX_ID 3
 #define AMARILLO "\x1b[33;1m"
 #define VERDE "\x1b[32;1m"
 #define ROJO "\x1b[31;1m"
@@ -14,7 +16,7 @@
 #define RESET "\033[0m"
 
 typedef struct buffer {
-	char buffer[100];
+	char buffer[MAX_BUFFER];
 	int tam;
 } buffer_t;
 
@@ -22,12 +24,14 @@ typedef struct centro {
 	hospital_t *hospital;
 	char *nombre_hospital;
 	bool activo;
+	char id[MAX_ID];
 } centro_t;
 
 typedef struct sistema_hospitales {
-	lista_t *hospitales;
+	hash_t *hospitales;
 	centro_t *hospital_activo;
-	size_t id_hospital_activo;
+	char id_hospital_activo[MAX_ID];
+	size_t contador_ids;
 } sistema_hospitales_t;
 
 char *leer_interaccion(buffer_t *buffer, char *texto)
@@ -44,7 +48,7 @@ char *leer_interaccion(buffer_t *buffer, char *texto)
  * Libera toda la memoria ocupada por un centro.
  * Si no se pudo liberar, retorna false. Caso contrario true.
 */
-bool centro_destruir_todo(void *elemento, void *aux)
+bool centro_destruir_todo(const char *clave, void *elemento, void *aux)
 {
 	if (!elemento)
 		return false;
@@ -65,9 +69,8 @@ bool centro_destruir_todo(void *elemento, void *aux)
 bool ejecutar_salir(void *menu, void *centros, void *aux2)
 {
 	sistema_hospitales_t *sistema = centros;
-	lista_con_cada_elemento(sistema->hospitales, centro_destruir_todo,
-				NULL);
-	lista_destruir(sistema->hospitales);
+	hash_con_cada_clave(sistema->hospitales, centro_destruir_todo, NULL);
+	hash_destruir(sistema->hospitales);
 	free(sistema);
 	menu_destruir(menu);
 	return false;
@@ -111,7 +114,6 @@ bool ejecutar_cargar(void *menu, void *centros, void *buffer)
 		buffer, "\nIngrese la dirección del archivo: ");
 
 	hospital_t *hospital_aux = hospital_crear_desde_archivo(archivo);
-
 	if (!hospital_aux) {
 		printf(ROJO "\nHubo un error al crear el hospital.\n");
 		printf("Volviendo al menu principal...\n" RESET);
@@ -130,10 +132,13 @@ bool ejecutar_cargar(void *menu, void *centros, void *buffer)
 	centro->hospital = hospital_aux;
 
 	sistema_hospitales_t *sistema = centros;
-	lista_insertar(sistema->hospitales, centro);
+	sistema->contador_ids++;
+	snprintf(centro->id, sizeof(centro->id), "%zu", sistema->contador_ids);
+
+	hash_insertar(sistema->hospitales, centro->id, centro, NULL);
 	printf(VERDE "\nHospital cargado con éxito.\n" AMARILLO "ID: " NARANJA
-		     "%zu" AMARILLO " Nombre: " NARANJA "%s\n" RESET,
-	       lista_tamanio(sistema->hospitales), centro->nombre_hospital);
+		     "%s" AMARILLO " Nombre: " NARANJA "%s\n" RESET,
+	       centro->id, centro->nombre_hospital);
 
 	return true;
 }
@@ -141,21 +146,19 @@ bool ejecutar_cargar(void *menu, void *centros, void *buffer)
 /**
  *  Muestra el estado de los hospitales. Retorna true. En caso de error, false.
 */
-bool estado_hospitales(void *hospital, void *aux)
+bool estado_hospitales(const char *clave, void *hospital, void *aux)
 {
-	if (!hospital || !aux)
+	if (!hospital)
 		return false;
 
 	centro_t *centro = hospital;
-	size_t *id = aux;
 	char estado[] = "INACTIVO";
 	if (centro->activo)
 		strcpy(estado, "ACTIVO");
 
 	printf(AMARILLO "\nNombre hospital: " NARANJA "%s" AMARILLO
-			" ID: " NARANJA "%zu" AMARILLO " Estado: " NARANJA "%s",
-	       centro->nombre_hospital, *id, estado);
-	(*id)++;
+			" ID: " NARANJA "%s" AMARILLO " Estado: " NARANJA "%s",
+	       centro->nombre_hospital, centro->id, estado);
 	return true;
 }
 
@@ -173,13 +176,13 @@ bool ejecutar_estado(void *menu, void *centros, void *aux2)
 	}
 
 	sistema_hospitales_t *sistema = centros;
-	if (lista_tamanio(sistema->hospitales) == 0) {
+	if (hash_cantidad(sistema->hospitales) == 0) {
 		printf(ROJO "\nNo hay hospitales cargados.\n");
 		printf("Volviendo al menu principal...\n" RESET);
 		return true;
 	}
-	size_t id = 1;
-	lista_con_cada_elemento(sistema->hospitales, estado_hospitales, &id);
+
+	hash_con_cada_clave(sistema->hospitales, estado_hospitales, NULL);
 
 	return true;
 }
@@ -192,6 +195,13 @@ bool ejecutar_activar(void *menu, void *centros, void *buffer)
 {
 	if (!centros || !buffer) {
 		printf(ROJO "\nHubo un error al activar un hospital.\n");
+		printf("Volviendo al menu principal...\n" RESET);
+		return true;
+	}
+	sistema_hospitales_t *sistema = centros;
+
+	if (hash_cantidad(sistema->hospitales) == 0) {
+		printf(ROJO "\nNo hay ningún hospital cargado para activar.\n");
 		printf("Volviendo al menu principal...\n" RESET);
 		return true;
 	}
@@ -211,17 +221,15 @@ bool ejecutar_activar(void *menu, void *centros, void *buffer)
 		}
 	}
 
-	sistema_hospitales_t *sistema = centros;
 	size_t id_hospital = (size_t)atoi(id);
 	if (id_hospital <= 0 ||
-	    id_hospital > lista_tamanio(sistema->hospitales)) {
-		printf(ROJO
-		       "\nLa id es incorrecta o no existe un hospital con esa id.\n");
+	    id_hospital > hash_cantidad(sistema->hospitales)) {
+		printf(ROJO "\nNo existe un hospital con esa id.\n");
 		printf("Volviendo al menu principal...\n" RESET);
 		return true;
 	}
 
-	if (sistema->id_hospital_activo == id_hospital) {
+	if (strcmp(sistema->id_hospital_activo, id) == 0) {
 		printf(AMARILLO "\nEse hospital ya está activo.\n" RESET);
 		return true;
 	}
@@ -232,13 +240,14 @@ bool ejecutar_activar(void *menu, void *centros, void *buffer)
 		sistema->hospital_activo->activo = false;
 	}
 
-	sistema->id_hospital_activo = id_hospital;
-	sistema->hospital_activo = lista_elemento_en_posicion(
-		sistema->hospitales, sistema->id_hospital_activo - 1);
+	snprintf(sistema->id_hospital_activo,
+		 sizeof(sistema->id_hospital_activo), "%zu", id_hospital);
+	sistema->hospital_activo =
+		hash_obtener(sistema->hospitales, sistema->id_hospital_activo);
 	sistema->hospital_activo->activo = true;
 
 	printf(VERDE "\nHospital activado con éxito.\n" AMARILLO "ID: " NARANJA
-		     "%zu" AMARILLO " Nombre: " NARANJA "%s\n" RESET,
+		     "%s" AMARILLO " Nombre: " NARANJA "%s\n" RESET,
 	       sistema->id_hospital_activo,
 	       sistema->hospital_activo->nombre_hospital);
 
@@ -342,21 +351,20 @@ bool ejecutar_destruir(void *menu, void *centros, void *aux2)
 		return true;
 	}
 
-	lista_quitar_de_posicion(sistema->hospitales,
-				 sistema->id_hospital_activo - 1);
+	hash_quitar(sistema->hospitales, sistema->id_hospital_activo);
 
 	printf(VERDE "\nHospital destruido con éxito.\n" AMARILLO
 		     "Nombre: " NARANJA "%s" AMARILLO " ID: " NARANJA
-		     "%zu\n" RESET,
+		     "%s\n" RESET,
 	       sistema->hospital_activo->nombre_hospital,
 	       sistema->id_hospital_activo);
 
-	centro_destruir_todo(sistema->hospital_activo, NULL);
+	centro_destruir_todo(sistema->id_hospital_activo,
+			     sistema->hospital_activo, NULL);
 	sistema->hospital_activo = NULL;
-	sistema->id_hospital_activo = 0;
+	snprintf(sistema->id_hospital_activo,
+		 sizeof(sistema->id_hospital_activo), "%i", 0);
 
-	printf(VERDE "\nSe actualizaron las ID de los hospitales:" RESET);
-	ejecutar_estado(menu, centros, aux2);
 	return true;
 }
 
@@ -455,7 +463,7 @@ void agregar_comandos(menu_t *menu)
 
 int main()
 {
-	buffer_t buffer = { .tam = 100, .buffer[0] = 0 };
+	buffer_t buffer = { .tam = MAX_BUFFER, .buffer[0] = 0 };
 	bool seguir = true;
 	char *comando;
 
@@ -463,7 +471,7 @@ int main()
 	if (!sistema)
 		return -1;
 
-	sistema->hospitales = lista_crear();
+	sistema->hospitales = hash_crear(MIN_HOSPITALES);
 	if (!sistema->hospitales) {
 		free(sistema);
 		return -1;
