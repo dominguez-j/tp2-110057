@@ -1,5 +1,6 @@
 #include "src/tp1.h"
 #include "src/menu.h"
+#include "src/hash.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -370,95 +371,79 @@ bool ejecutar_destruir(void *menu, void *centros, void *aux2)
 
 void agregar_comandos(menu_t *menu)
 {
-	hash_t *alias_salir = hash_crear(MIN_ALIAS);
-	hash_insertar(alias_salir, "SALIR", NULL, NULL);
-	hash_insertar(alias_salir, "salir", NULL, NULL);
-	hash_insertar(alias_salir, "s", NULL, NULL);
-	hash_insertar(alias_salir, "exit", NULL, NULL);
-	menu_agregar_comando(
-		menu,
-		comando_crear(
-			"S", "Salir del programa",
-			"Sale del programa, liberando toda la memoria ocupada por el mismo",
-			ejecutar_salir, alias_salir));
+	comando_t *salir = comando_crear(
+		"S", "Salir del programa",
+		"Sale del programa, liberando toda la memoria ocupada por el mismo",
+		ejecutar_salir);
+	menu_agregar_comando(menu, salir);
+	comando_agregar_alias(salir, "SALIR");
+	comando_agregar_alias(salir, "salir");
+	comando_agregar_alias(salir, "s");
+	comando_agregar_alias(salir, "exit");
 
-	hash_t *alias_ayuda = hash_crear(MIN_ALIAS);
-	hash_insertar(alias_ayuda, "h", "h", NULL);
-	hash_insertar(alias_ayuda, "help", NULL, NULL);
-	hash_insertar(alias_ayuda, "ayuda", NULL, NULL);
-	hash_insertar(alias_ayuda, "AYUDA", NULL, NULL);
-	menu_agregar_comando(
-		menu,
-		comando_crear(
-			"H", "Mostrar menu de ayuda",
-			"Muestra el menu de ayuda, con todos los comandos y explicaciones ",
-			ejecutar_ayuda, alias_ayuda));
+	comando_t *ayuda = comando_crear(
+		"H", "Mostrar menu de ayuda",
+		"Muestra el menu de ayuda, con todos los comandos y explicaciones ",
+		ejecutar_ayuda);
+	menu_agregar_comando(menu, ayuda);
+	comando_agregar_alias(ayuda, "help");
+	comando_agregar_alias(ayuda, "h");
+	comando_agregar_alias(ayuda, "ayuda");
+	comando_agregar_alias(ayuda, "AYUDA");
 
-	hash_t *alias_cargar = hash_crear(MIN_ALIAS);
-	hash_insertar(alias_cargar, "c", NULL, NULL);
-	hash_insertar(alias_cargar, "cargar", NULL, NULL);
-	hash_insertar(alias_cargar, "CARGAR", NULL, NULL);
-	menu_agregar_comando(
-		menu,
-		comando_crear(
-			"C", "Cargar hospital",
-			"Pide un nombre de archivo e intenta cargarlo creando un hospital",
-			ejecutar_cargar, alias_cargar));
+	comando_t *cargar = comando_crear(
+		"C", "Cargar hospital",
+		"Pide un nombre de archivo e intenta cargarlo creando un hospital",
+		ejecutar_cargar);
+	menu_agregar_comando(menu, cargar);
+	comando_agregar_alias(cargar, "c");
+	comando_agregar_alias(cargar, "cargar");
+	comando_agregar_alias(cargar, "CARGAR");
 
-	hash_t *alias_estado = hash_crear(MIN_ALIAS);
-	hash_insertar(alias_estado, "e", NULL, NULL);
-	hash_insertar(alias_estado, "estado", NULL, NULL);
-	hash_insertar(alias_estado, "ESTADO", NULL, NULL);
-	menu_agregar_comando(
-		menu,
-		comando_crear(
-			"E", "Mostrar estado de los hospitales",
-			"Muestra un listado con los hospitales cargados (y el activo, si hay alguno)",
-			ejecutar_estado, alias_estado));
+	comando_t *estado = comando_crear(
+		"E", "Mostrar estado de los hospitales",
+		"Muestra un listado con los hospitales cargados (y el activo, si hay alguno)",
+		ejecutar_estado);
+	menu_agregar_comando(menu, estado);
+	comando_agregar_alias(estado, "e");
+	comando_agregar_alias(estado, "estado");
+	comando_agregar_alias(estado, "ESTADO");
 
-	hash_t *alias_activar = hash_crear(MIN_ALIAS);
-	hash_insertar(alias_activar, "a", NULL, NULL);
-	hash_insertar(alias_activar, "activar", NULL, NULL);
-	hash_insertar(alias_activar, "ACTIVAR", NULL, NULL);
-	menu_agregar_comando(
-		menu,
-		comando_crear(
-			"A", "Activar hospital",
-			"Pide un número de identificación y activa el hospital",
-			ejecutar_activar, alias_activar));
+	comando_t *activar = comando_crear(
+		"A", "Activar hospital",
+		"Pide un número de identificación y activa el hospital",
+		ejecutar_activar);
+	menu_agregar_comando(menu, activar);
+	comando_agregar_alias(activar, "a");
+	comando_agregar_alias(activar, "activar");
+	comando_agregar_alias(activar, "ACTIVAR");
 
-	hash_t *alias_mostrar = hash_crear(MIN_ALIAS);
-	hash_insertar(alias_mostrar, "m", NULL, NULL);
-	hash_insertar(alias_mostrar, "mostrar", NULL, NULL);
-	hash_insertar(alias_mostrar, "MOSTRAR", NULL, NULL);
-	menu_agregar_comando(
-		menu,
-		comando_crear(
-			"M", "Mostrar hospital activo",
-			"Muestra un listado con los nombres de todos los pokemones en el hospital activo",
-			ejecutar_mostrar, alias_mostrar));
+	comando_t *mostrar = comando_crear(
+		"M", "Mostrar hospital activo",
+		"Muestra un listado con los nombres de todos los pokemones en el hospital activo",
+		ejecutar_mostrar);
+	menu_agregar_comando(menu, mostrar);
+	comando_agregar_alias(mostrar, "m");
+	comando_agregar_alias(mostrar, "MOSTRAR");
+	comando_agregar_alias(mostrar, "mostrar");
 
-	hash_t *alias_listar = hash_crear(MIN_ALIAS);
-	hash_insertar(alias_listar, "l", NULL, NULL);
-	hash_insertar(alias_listar, "listar", NULL, NULL);
-	hash_insertar(alias_listar, "LISTAR", NULL, NULL);
-	menu_agregar_comando(
-		menu,
-		comando_crear(
-			"L", "Listar hospital activo",
-			"Muestra un listado detallado de todos los pokemones en el hospital activo",
-			ejecutar_listar, alias_listar));
+	comando_t *listar = comando_crear(
+		"L", "Listar hospital activo",
+		"Muestra un listado detallado de todos los pokemones en el hospital activo",
+		ejecutar_listar);
+	menu_agregar_comando(menu, listar);
+	comando_agregar_alias(listar, "l");
+	comando_agregar_alias(listar, "LISTAR");
+	comando_agregar_alias(listar, "listar");
 
-	hash_t *alias_destruir = hash_crear(MIN_ALIAS);
-	hash_insertar(alias_destruir, "d", NULL, NULL);
-	hash_insertar(alias_destruir, "destruir", NULL, NULL);
-	hash_insertar(alias_destruir, "DESTRUIR", NULL, NULL);
-	menu_agregar_comando(
-		menu,
-		comando_crear(
-			"D", "Destruir hospital activo",
-			"Destruye el hospital activo, liberando toda la memoria ocupada por el mismo",
-			ejecutar_destruir, alias_destruir));
+	comando_t *destruir = comando_crear(
+		"D", "Destruir hospital activo",
+		"Destruye el hospital activo, liberando toda la memoria ocupada por el mismo",
+		ejecutar_destruir);
+	menu_agregar_comando(menu, destruir);
+	comando_agregar_alias(destruir, "d");
+	comando_agregar_alias(destruir, "DESTRUIR");
+	comando_agregar_alias(destruir, "destruir");
 }
 
 int main()

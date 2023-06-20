@@ -1,9 +1,11 @@
 #include "menu.h"
+#include "hash.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 #define CANTIDAD_BASE_COMANDOS 15
+#define CANTIDAD_BASE_ALIAS 10
 #define AZUL "\x1b[34;1m"
 #define AMARILLO "\x1b[33;1m"
 #define VERDE "\x1b[38;5;43m"
@@ -139,8 +141,7 @@ void menu_mostrar(menu_t *menu)
 }
 
 comando_t *comando_crear(void *cmd, void *doc, void *doc_aux,
-			 bool (*ejecutar)(void *, void *, void *),
-			 hash_t *alias)
+			 bool (*ejecutar)(void *, void *, void *))
 {
 	if (!cmd || !doc || !doc_aux || !ejecutar)
 		return NULL;
@@ -153,7 +154,7 @@ comando_t *comando_crear(void *cmd, void *doc, void *doc_aux,
 	comando->nombre = cmd;
 	comando->documentacion = doc;
 	comando->documentacion_completa = doc_aux;
-	comando->alias = alias;
+	comando->alias = NULL;
 	comando->ejecutar = ejecutar;
 
 	return comando;
@@ -174,9 +175,20 @@ char *comando_informacion_completa(comando_t *cmd)
 	return !cmd ? NULL : cmd->documentacion_completa;
 }
 
-hash_t *comando_alias(comando_t *cmd)
+comando_t *comando_agregar_alias(comando_t *cmd, const char *alias)
 {
-	return !cmd ? NULL : cmd->alias;
+	if (!cmd || !alias)
+		return NULL;
+
+	if (!cmd->alias) {
+		cmd->alias = hash_crear(CANTIDAD_BASE_ALIAS);
+		if (!cmd->alias)
+			return NULL;
+	}
+
+	hash_t *aux = hash_insertar(cmd->alias, alias, NULL, NULL);
+
+	return !aux ? NULL : cmd;
 }
 
 void comando_destruir(comando_t *comando)
@@ -197,18 +209,13 @@ menu_t *menu_crear(void *nombre_menu)
 	if (!menu)
 		return NULL;
 
-	menu->nombre_menu = nombre_menu;
-
-	if (!menu->nombre_menu) {
-		free(menu);
-		return NULL;
-	}
-
 	menu->comandos = hash_crear(CANTIDAD_BASE_COMANDOS);
 	if (!menu->comandos) {
 		free(menu);
 		return NULL;
 	}
+
+	menu->nombre_menu = nombre_menu;
 
 	return menu;
 }
@@ -218,12 +225,9 @@ menu_t *menu_agregar_comando(menu_t *menu, comando_t *cmd)
 	if (!menu || !cmd)
 		return NULL;
 
-	hash_insertar(menu->comandos, cmd->nombre, cmd, NULL);
+	hash_t *aux = hash_insertar(menu->comandos, cmd->nombre, cmd, NULL);
 
-	if (!menu->comandos)
-		return NULL;
-
-	return menu;
+	return !aux ? NULL : menu;
 }
 
 char *menu_nombre(menu_t *menu)

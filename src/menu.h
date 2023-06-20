@@ -3,7 +3,6 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include "hash.h"
 
 typedef struct comando comando_t;
 typedef struct menu menu_t;
@@ -16,8 +15,7 @@ typedef struct menu menu_t;
  * Devuelve el puntero a comando o NULL en caso de error.
 */
 comando_t *comando_crear(void *cmd, void *doc, void *doc_aux,
-			 bool (*ejecutar)(void *, void *, void *),
-			 hash_t *alias);
+			 bool (*ejecutar)(void *, void *, void *));
 
 /**
  * Devuelve el nombre del comando. En caso de error, NULL.
@@ -35,9 +33,10 @@ char *comando_informacion(comando_t *cmd);
 char *comando_informacion_completa(comando_t *cmd);
 
 /**
- * Devuelve el hash de alias del comando. En caso de error, NULL.
+ * Agrega un alias para un comando. Si se pudo agregar se devuelve un puntero al comando.
+ * Sino se devuelve NULL.
 */
-hash_t *comando_alias(comando_t *cmd);
+comando_t *comando_agregar_alias(comando_t *cmd, const char *alias);
 
 /**
  * Libera la memoria ocupada por el comando.
