@@ -8,6 +8,7 @@
 #define AMARILLO "\x1b[33;1m"
 #define VERDE "\x1b[38;5;43m"
 #define NARANJA "\x1b[38;5;208m"
+#define ROJO "\x1b[31;1m"
 #define RESET "\033[0m"
 
 typedef struct comando_aux {
@@ -83,7 +84,7 @@ void menu_ayuda_mostrar(menu_t *menu)
 	if (!menu)
 		return;
 
-	int longitud_menu = 111;
+	int longitud_menu = 113;
 
 	printf("\n");
 	imprimir_linea(longitud_menu);
@@ -281,8 +282,8 @@ bool menu_ejecutar_comando(menu_t *menu, void *cmd, void *aux, void *aux2)
 	if (comando)
 		return comando->ejecutar(menu, aux, aux2);
 
-	printf(AMARILLO
-	       "Comando inexistente, por favor use el comando de ayuda\n" RESET);
+	printf(ROJO
+	       "\nComando inexistente, por favor use el comando de ayuda\n" RESET);
 	return true;
 }
 
