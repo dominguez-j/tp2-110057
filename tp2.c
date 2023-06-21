@@ -16,11 +16,6 @@
 #define NARANJA "\x1b[38;5;208m"
 #define RESET "\033[0m"
 
-typedef struct buffer {
-	char buffer[MAX_BUFFER];
-	int tam;
-} buffer_t;
-
 typedef struct centro {
 	hospital_t *hospital;
 	char *nombre_hospital;
@@ -35,10 +30,14 @@ typedef struct sistema_hospitales {
 	size_t contador_ids;
 } sistema_hospitales_t;
 
-char *leer_interaccion(buffer_t *buffer, char *texto)
+/**
+ * Pide un ingreso al usuario. Retorna la respuesta del usuario.
+ * En caso de error, retorna NULL.
+*/
+char *leer_interaccion(char *buffer, char *texto)
 {
 	printf(AMARILLO "%s \n" RESET, texto);
-	char *respuesta = fgets(buffer->buffer, buffer->tam, stdin);
+	char *respuesta = fgets(buffer, MAX_BUFFER, stdin);
 	if (respuesta)
 		respuesta[strlen(respuesta) - 1] = 0;
 
@@ -67,7 +66,7 @@ bool centro_destruir_todo(const char *clave, void *elemento, void *aux)
 * Libera toda la memoria ocupada por el programa.
 * La del menu y el centro. Y retorna false.
 */
-bool ejecutar_salir(void *menu, void *centros, void *aux2)
+bool ejecutar_salir(void *menu, void *centros, void *buffer)
 {
 	sistema_hospitales_t *sistema = centros;
 	hash_con_cada_clave(sistema->hospitales, centro_destruir_todo, NULL);
@@ -105,7 +104,7 @@ char *copiar_nombre(char *nombre)
 */
 bool ejecutar_cargar(void *menu, void *centros, void *buffer)
 {
-	if (!centros || !buffer) {
+	if (!centros) {
 		printf(ROJO "\nHubo un error al crear el hospital.\n" RESET);
 		printf("Volviendo al menu principal...\n" RESET);
 		return true;
@@ -167,7 +166,7 @@ bool estado_hospitales(const char *clave, void *hospital, void *aux)
  * Muestra todos los hospitales y su estado
  * Retorna true.
 */
-bool ejecutar_estado(void *menu, void *centros, void *aux2)
+bool ejecutar_estado(void *menu, void *centros, void *buffer)
 {
 	if (!centros) {
 		printf(ROJO
@@ -184,7 +183,7 @@ bool ejecutar_estado(void *menu, void *centros, void *aux2)
 	}
 
 	hash_con_cada_clave(sistema->hospitales, estado_hospitales, NULL);
-
+	printf("\n");
 	return true;
 }
 
@@ -194,7 +193,7 @@ bool ejecutar_estado(void *menu, void *centros, void *aux2)
 */
 bool ejecutar_activar(void *menu, void *centros, void *buffer)
 {
-	if (!centros || !buffer) {
+	if (!centros) {
 		printf(ROJO "\nHubo un error al activar un hospital.\n");
 		printf("Volviendo al menu principal...\n" RESET);
 		return true;
@@ -245,6 +244,12 @@ bool ejecutar_activar(void *menu, void *centros, void *buffer)
 		 sizeof(sistema->id_hospital_activo), "%zu", id_hospital);
 	sistema->hospital_activo =
 		hash_obtener(sistema->hospitales, sistema->id_hospital_activo);
+
+	if (!sistema->hospital_activo) {
+		printf(ROJO "\nNo existe un hospital con esa id.\n");
+		printf("Volviendo al menu principal...\n" RESET);
+		return true;
+	}
 	sistema->hospital_activo->activo = true;
 
 	printf(VERDE "\nHospital activado con éxito.\n" AMARILLO "ID: " NARANJA
@@ -283,7 +288,7 @@ bool imprimir_pokemones(pokemon_t *poke, void *aux)
  * Muestra los nombres de los pokemones del hospital.
  * Retorna true.
 */
-bool ejecutar_mostrar(void *menu, void *centros, void *aux2)
+bool ejecutar_mostrar(void *menu, void *centros, void *buffer)
 {
 	if (!centros) {
 		printf(ROJO "\nHubo un error al mostrar el hospital.\n");
@@ -299,6 +304,7 @@ bool ejecutar_mostrar(void *menu, void *centros, void *aux2)
 		return true;
 	}
 	bool completo = false;
+	printf("\n");
 	hospital_a_cada_pokemon(sistema->hospital_activo->hospital,
 				imprimir_pokemones, &completo);
 
@@ -309,7 +315,7 @@ bool ejecutar_mostrar(void *menu, void *centros, void *aux2)
  * Muestra todos los datos de los pokemones del hospital
  * Retorna true.
 */
-bool ejecutar_listar(void *menu, void *centros, void *aux2)
+bool ejecutar_listar(void *menu, void *centros, void *buffer)
 {
 	if (!centros) {
 		printf(ROJO "\nHubo un error al listar el hospital.\n");
@@ -326,6 +332,7 @@ bool ejecutar_listar(void *menu, void *centros, void *aux2)
 	}
 
 	bool completo = true;
+	printf("\n");
 	hospital_a_cada_pokemon(sistema->hospital_activo->hospital,
 				imprimir_pokemones, &completo);
 
@@ -336,7 +343,7 @@ bool ejecutar_listar(void *menu, void *centros, void *aux2)
  * Libera toda la memoria ocupada por el hospital activo.
  * Retorna true.
 */
-bool ejecutar_destruir(void *menu, void *centros, void *aux2)
+bool ejecutar_destruir(void *menu, void *centros, void *buffer)
 {
 	if (!centros) {
 		printf(ROJO "\nHubo un error al destruir el hospital.\n");
@@ -369,88 +376,110 @@ bool ejecutar_destruir(void *menu, void *centros, void *aux2)
 	return true;
 }
 
-void agregar_comandos(menu_t *menu)
+/**
+ * Agrega los comando necesarios para el programa. En caso de error, retorna false.
+ * Sino true.
+*/
+bool agregar_comandos(menu_t *menu)
 {
 	comando_t *salir = comando_crear(
 		"S", "Salir del programa",
 		"Sale del programa, liberando toda la memoria ocupada por el mismo",
 		ejecutar_salir);
-	menu_agregar_comando(menu, salir);
-	comando_agregar_alias(salir, "SALIR");
-	comando_agregar_alias(salir, "salir");
-	comando_agregar_alias(salir, "s");
-	comando_agregar_alias(salir, "exit");
+
+	if (!menu_agregar_comando(menu, salir) ||
+	    !comando_agregar_alias(salir, "SALIR") ||
+	    !comando_agregar_alias(salir, "salir") ||
+	    !comando_agregar_alias(salir, "s") ||
+	    !comando_agregar_alias(salir, "exit"))
+		return false;
 
 	comando_t *ayuda = comando_crear(
 		"H", "Mostrar menu de ayuda",
 		"Muestra el menu de ayuda, con todos los comandos y explicaciones ",
 		ejecutar_ayuda);
-	menu_agregar_comando(menu, ayuda);
-	comando_agregar_alias(ayuda, "help");
-	comando_agregar_alias(ayuda, "h");
-	comando_agregar_alias(ayuda, "ayuda");
-	comando_agregar_alias(ayuda, "AYUDA");
+
+	if (!menu_agregar_comando(menu, ayuda) ||
+	    !comando_agregar_alias(ayuda, "help") ||
+	    !comando_agregar_alias(ayuda, "h") ||
+	    !comando_agregar_alias(ayuda, "ayuda") ||
+	    !comando_agregar_alias(ayuda, "AYUDA"))
+		return false;
 
 	comando_t *cargar = comando_crear(
 		"C", "Cargar hospital",
 		"Pide un nombre de archivo e intenta cargarlo creando un hospital",
 		ejecutar_cargar);
-	menu_agregar_comando(menu, cargar);
-	comando_agregar_alias(cargar, "c");
-	comando_agregar_alias(cargar, "cargar");
-	comando_agregar_alias(cargar, "CARGAR");
+
+	if (!menu_agregar_comando(menu, cargar) ||
+	    !comando_agregar_alias(cargar, "c") ||
+	    !comando_agregar_alias(cargar, "cargar") ||
+	    !comando_agregar_alias(cargar, "CARGAR"))
+		return false;
 
 	comando_t *estado = comando_crear(
 		"E", "Mostrar estado de los hospitales",
 		"Muestra un listado con los hospitales cargados (y el activo, si hay alguno)",
 		ejecutar_estado);
-	menu_agregar_comando(menu, estado);
-	comando_agregar_alias(estado, "e");
-	comando_agregar_alias(estado, "estado");
-	comando_agregar_alias(estado, "ESTADO");
+
+	if (!menu_agregar_comando(menu, estado) ||
+	    !comando_agregar_alias(estado, "e") ||
+	    !comando_agregar_alias(estado, "estado") ||
+	    !comando_agregar_alias(estado, "ESTADO"))
+		return false;
 
 	comando_t *activar = comando_crear(
 		"A", "Activar hospital",
 		"Pide un número de identificación y activa el hospital",
 		ejecutar_activar);
-	menu_agregar_comando(menu, activar);
-	comando_agregar_alias(activar, "a");
-	comando_agregar_alias(activar, "activar");
-	comando_agregar_alias(activar, "ACTIVAR");
+
+	if (!menu_agregar_comando(menu, activar) ||
+	    !comando_agregar_alias(activar, "a") ||
+	    !comando_agregar_alias(activar, "activar") ||
+	    !comando_agregar_alias(activar, "ACTIVAR"))
+		return false;
 
 	comando_t *mostrar = comando_crear(
 		"M", "Mostrar hospital activo",
 		"Muestra un listado con los nombres de todos los pokemones en el hospital activo",
 		ejecutar_mostrar);
-	menu_agregar_comando(menu, mostrar);
-	comando_agregar_alias(mostrar, "m");
-	comando_agregar_alias(mostrar, "MOSTRAR");
-	comando_agregar_alias(mostrar, "mostrar");
+
+	if (!menu_agregar_comando(menu, mostrar) ||
+	    !comando_agregar_alias(mostrar, "m") ||
+	    !comando_agregar_alias(mostrar, "mostrar") ||
+	    !comando_agregar_alias(mostrar, "MOSTRAR"))
+		return false;
 
 	comando_t *listar = comando_crear(
 		"L", "Listar hospital activo",
 		"Muestra un listado detallado de todos los pokemones en el hospital activo",
 		ejecutar_listar);
-	menu_agregar_comando(menu, listar);
-	comando_agregar_alias(listar, "l");
-	comando_agregar_alias(listar, "LISTAR");
-	comando_agregar_alias(listar, "listar");
+	if (!menu_agregar_comando(menu, listar) ||
+	    !comando_agregar_alias(listar, "l") ||
+	    !comando_agregar_alias(listar, "listar") ||
+	    !comando_agregar_alias(listar, "LISTAR"))
+		return false;
 
 	comando_t *destruir = comando_crear(
 		"D", "Destruir hospital activo",
 		"Destruye el hospital activo, liberando toda la memoria ocupada por el mismo",
 		ejecutar_destruir);
-	menu_agregar_comando(menu, destruir);
-	comando_agregar_alias(destruir, "d");
-	comando_agregar_alias(destruir, "DESTRUIR");
-	comando_agregar_alias(destruir, "destruir");
+
+	if (!menu_agregar_comando(menu, destruir) ||
+	    !comando_agregar_alias(destruir, "d") ||
+	    !comando_agregar_alias(destruir, "destruir") ||
+	    !comando_agregar_alias(destruir, "DESTRUIR"))
+		return false;
+
+	return true;
 }
 
 int main()
 {
-	buffer_t buffer = { .tam = MAX_BUFFER, .buffer[0] = 0 };
 	bool seguir = true;
 	char *comando;
+	char buffer[MAX_BUFFER];
+	buffer[0] = 0;
 
 	sistema_hospitales_t *sistema = calloc(1, sizeof(sistema_hospitales_t));
 	if (!sistema)
@@ -469,11 +498,17 @@ int main()
 		return -1;
 	}
 
-	agregar_comandos(menu);
+	if (!agregar_comandos(menu)) {
+		free(sistema->hospitales);
+		free(sistema);
+		free(menu);
+		return -1;
+	}
+
 	while (seguir) {
 		menu_mostrar(menu);
-		comando = leer_interaccion(&buffer, "Ingrese una opción: ");
-		seguir = menu_ejecutar_comando(menu, comando, sistema, &buffer);
+		comando = leer_interaccion(buffer, "Ingrese una opción: ");
+		seguir = menu_ejecutar_comando(menu, comando, sistema, buffer);
 	}
 	return 0;
 }
