@@ -20,8 +20,8 @@ typedef struct comando_aux {
 
 struct comando {
 	char *nombre;
-	void *documentacion;
-	void *documentacion_completa;
+	void *info;
+	void *info_ayuda;
 	hash_t *alias;
 	bool (*ejecutar)(void *, void *, void *);
 };
@@ -75,7 +75,7 @@ bool mostrar_cada_comando_completo(const char *clave, void *cmd, void *aux)
 	printf(VERDE "   %s (", (char *)comando->nombre);
 	hash_con_cada_clave(comando->alias, mostrar_cada_alias, &primer_alias);
 	printf(")" AMARILLO " : %-.*s \n", longitud_menu - 16,
-	       (char *)comando->documentacion_completa);
+	       (char *)comando->info_ayuda);
 	printf(AZUL "* %-*s *\n", longitud_menu - 4, "");
 
 	return true;
@@ -114,7 +114,7 @@ bool mostrar_cada_comando(const char *clave, void *cmd, void *aux)
 	int longitud_menu = *(int *)aux;
 
 	printf(VERDE "     %s " AMARILLO ": %-*s  \n", (char *)comando->nombre,
-	       35, (char *)comando->documentacion);
+	       35, (char *)comando->info);
 	printf(AZUL "* %-*s *\n", longitud_menu - 4, "");
 
 	return true;
@@ -140,10 +140,10 @@ void menu_mostrar(menu_t *menu)
 	imprimir_linea(longitud_menu);
 }
 
-comando_t *comando_crear(void *cmd, void *doc, void *doc_aux,
+comando_t *comando_crear(void *cmd, void *info, void *info_ayuda,
 			 bool (*ejecutar)(void *, void *, void *))
 {
-	if (!cmd || !doc || !doc_aux || !ejecutar)
+	if (!cmd || !info || !info_ayuda || !ejecutar)
 		return NULL;
 
 	comando_t *comando = malloc(sizeof(comando_t));
@@ -152,8 +152,8 @@ comando_t *comando_crear(void *cmd, void *doc, void *doc_aux,
 		return NULL;
 
 	comando->nombre = cmd;
-	comando->documentacion = doc;
-	comando->documentacion_completa = doc_aux;
+	comando->info = info;
+	comando->info_ayuda = info_ayuda;
 	comando->alias = NULL;
 	comando->ejecutar = ejecutar;
 
@@ -167,12 +167,12 @@ char *comando_nombre(comando_t *cmd)
 
 char *comando_informacion(comando_t *cmd)
 {
-	return !cmd ? NULL : cmd->documentacion;
+	return !cmd ? NULL : cmd->info;
 }
 
 char *comando_informacion_completa(comando_t *cmd)
 {
-	return !cmd ? NULL : cmd->documentacion_completa;
+	return !cmd ? NULL : cmd->info_ayuda;
 }
 
 comando_t *comando_agregar_alias(comando_t *cmd, const char *alias)
