@@ -87,19 +87,27 @@ A su vez el sistema sabe cual es el hospital que esta activo y su id.
 
 <br>Función `ejecutar_salir`
 
-Para llevar a cabo esta función, debemos entender que tenemos que meternos en lo profundo de la estructura para poder ir liberando de a poco. Para ello usamos la función `hash_con_cada_clave` que nos va a permitir iterar el hash hospitales y le pasamos una función que destruye cada centro. Una vez hecho todo eso, liberamos el sistema y el menu.
+Para llevar a cabo esta función, debemos entender que tenemos que meternos en lo profundo de la estructura para poder ir liberando de a poco. Para ello usamos la función `hash_con_cada_clave` que nos va a permitir iterar el hash hospitales y le pasamos una función que se encarga de destruir cada centro. Una vez liberada toda la memoria ocupada por los centros, resta liberar el sistema y el menu.
 
 <br>Función `ejecutar_cargar`
 
-Primero hacemos todas las verificaciones necesarias para crear un centro. Una vez esto, vamos a poder crear el centro y agregarlo al hash hospitales del sistema. Para insertar usamos `hash_insertar`.
+Se pide una dirección de archivo, la cual tiene todos los datos del hospital. Para crear un hospital necesitamos de esa dirección. Entonces usamos `hospital_crear_desde_archivo` que dependiendo de la situación nos devuelve un puntero a hospital o NULL. Si nos devuelve NULL, se tira un error por pantalla. Y en caso de que nos devuelva un hospital lo agregamos a nuestro hash hospitales con la función `hash_insertar`.
 
 <br>Función `ejecutar_activar`  
 
-Se hacen todas las verificaciones para poder activar un hospital, donde nos aseguramos de que sea un id válida. Si ya habia un hospital activado, se desactiva ese para activar el nuevo a activar. Una vez eso, se le asigna al sistema el nuevo hospital activado.
+Se pide una id, y se verifica que sea válida. 
+1) En caso de que sea una id inválida si tira un mensaje de error.
+2) Si esa es la misma del hospital que esta activo se le va a informar al usuario que ya esta activo ese hospital.
+3) En caso de que sea válida y ya haya un hospital activo, se va a desactivar el activo y se cambia por este nuevo.
+4) Y por ultimo, en caso de que no sea ninguna de las anteriores, basicamente que no tengo ningún hospital activo se busca el hospital y se lo activa.
+
+Haciendo así que el sistema tenga un puntero a ese hospital.
 
 <br>Función `ejecutar_destruir`
 
-Se checkea todo lo necesario para destruir el hospital activo. Si no hay, la función termina ahí. En caso de que haya uno, vamos a usar `hash_quitar` para quitar el centro activo. Ahora debemos destruir el centro completo mediante una función auxiliar que se encarga de eso.
+Primero se verifica que haya un hospital activo, en caso de que no exista se muestra un mensaje de error.
+En caso de que exista uno, se lo va eliminar con la función `hash_quitar` que lo quita del hash de hospitales. Pero despuúes vamos a necesitar destruir todo el centro, por lo cual se usa una función auxiliar que se encarga de hacer eso mismo.
+Una vez eso, actualizamos la información necesaria del sistema.
 
 ## Respuestas a las preguntas teóricas
 
@@ -120,6 +128,5 @@ Ahora, faltaría adaptar el código a un abb. No hace falta cambiar las firmas n
 | hospital_obtener_pokemon     | O(n)           | O(log n) |
 | hospital_destruir            | O(n)           | O(n)     |
 
-Como podemos ver, el uso de un ABB reduce la complejidad de las funciones en su mayoría. Por lo cual, si lo que buscamos es que sea menos complejo el ABB es una muy buena opción.
-
-
+Como podemos ver, el uso de un ABB reduce la complejidad de las funciones en su mayoría. 
+Por lo cual, si lo que buscamos es menor complejidad en las operaciones, el uso del ABB es muy adecuado para este caso.

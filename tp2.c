@@ -221,9 +221,7 @@ bool ejecutar_activar(void *menu, void *centros, void *buffer)
 		}
 	}
 
-	size_t id_hospital = (size_t)atoi(id);
-	if (id_hospital <= 0 ||
-	    id_hospital > hash_cantidad(sistema->hospitales)) {
+	if (atoi(id) <= 0 || !hash_contiene(sistema->hospitales, id)) {
 		printf(ROJO "\nNo existe un hospital con esa id.\n");
 		printf("Volviendo al menu principal...\n" RESET);
 		return true;
@@ -231,17 +229,19 @@ bool ejecutar_activar(void *menu, void *centros, void *buffer)
 
 	if (strcmp(sistema->id_hospital_activo, id) == 0) {
 		printf(AMARILLO "\nEse hospital ya está activo.\n" RESET);
+		printf("Volviendo al menu principal...\n" RESET);
 		return true;
 	}
 
 	if (sistema->hospital_activo) {
 		printf(AMARILLO
 		       "\nYa había un hospital activo. Se va desactivar, para activar el nuevo.\n" RESET);
+		printf("Volviendo al menu principal...\n" RESET);
 		sistema->hospital_activo->activo = false;
 	}
 
 	snprintf(sistema->id_hospital_activo,
-		 sizeof(sistema->id_hospital_activo), "%zu", id_hospital);
+		 sizeof(sistema->id_hospital_activo), "%s", id);
 	sistema->hospital_activo =
 		hash_obtener(sistema->hospitales, sistema->id_hospital_activo);
 
